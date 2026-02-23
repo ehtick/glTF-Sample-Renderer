@@ -133,3 +133,150 @@ vec3 toneMap(vec3 color)
 
     return linearTosRGB(color);
 }
+
+// =============================================================================
+// INVERSE TONEMAPPING FUNCTIONS
+// =============================================================================
+
+// Inverse ACES tone map (Narkowicz approximation)
+// Solves: y = (x*(A*x + B)) / (x*(C*x + D) + E) for x given y
+vec3 toneMapACES_NarkowiczInverse(vec3 toneMapped)
+{
+    const float A = 2.51;
+    const float B = 0.03;
+    const float C = 2.43;
+    const float D = 0.59;
+    const float E = 0.14;
+    
+    // For each component, solve the quadratic equation
+    vec3 result;
+    for(int i = 0; i < 3; i++)
+    {
+        float y = toneMapped[i];
+        
+        // Rearrange to: y*(C*x^2 + D*x + E) = x*(A*x + B)
+        // Which gives: y*C*x^2 + y*D*x + y*E = A*x^2 + B*x
+        // Rearrange to: (y*C - A)*x^2 + (y*D - B)*x + y*E = 0
+        
+        float a = y * C - A;
+        float b = y * D - B;
+        float c = y * E;
+        
+        // Solve quadratic equation: ax^2 + bx + c = 0
+        float discriminant = b * b - 4.0 * a * c;
+        
+        // Take positive root
+        float x1 = (-b + sqrt(discriminant)) / (2.0 * a);
+        float x2 = (-b - sqrt(discriminant)) / (2.0 * a);
+        result[i] = max(0.0, max(x1, x2));
+        
+    }
+    
+    return result;
+}
+
+// Inverse RRT and ODT fit
+// Solves: y = (x*(x + 0.0245786) - 0.000090537) / (x*(0.983729*x + 0.4329510) + 0.238081) for x
+vec3 RRTAndODTFitInverse(vec3 toneMapped)
+{
+    vec3 result;
+    for(int i = 0; i < 3; i++)
+    {
+        float y = toneMapped[i];
+        
+        // Rearrange: y * (x*(0.983729*x + 0.4329510) + 0.238081) = x*(x + 0.0245786) - 0.000090537
+        // y * (0.983729*x^2 + 0.4329510*x + 0.238081) = x^2 + 0.0245786*x - 0.000090537
+        // y*0.983729*x^2 + y*0.4329510*x + y*0.238081 = x^2 + 0.0245786*x - 0.000090537
+        // (y*0.983729 - 1.0)*x^2 + (y*0.4329510 - 0.0245786)*x + (y*0.238081 + 0.000090537) = 0
+        
+        float a = y * 0.983729 - 1.0;
+        float b = y * 0.4329510 - 0.0245786;
+        float c = y * 0.238081 + 0.000090537;
+        
+        float discriminant = b * b - 4.0 * a * c;
+        
+        float x1 = (-b + sqrt(discriminant)) / (2.0 * a);
+        float x2 = (-b - sqrt(discriminant)) / (2.0 * a);
+        result[i] = max(0.0, max(x1, x2));
+        
+    }
+    
+    return result;
+}
+
+// Inverse ACES Hill tone mapping
+vec3 toneMapACES_HillInverse(vec3 toneMapped)
+{
+    vec3 color = toneMapped;
+    
+    // Undo ACES output matrix
+    color = inverse(ACESOutputMat) * color;
+    
+    // Undo RRT and ODT
+    color = RRTAndODTFitInverse(color);
+    
+    // Undo ACES input matrix
+    color = inverse(ACESInputMat) * color;
+    
+    return color;
+}
+
+// Inverse Khronos PBR neutral tone mapping
+// Note: This is a complex inverse that may not be perfectly accurate due to the conditional logic
+vec3 toneMap_KhronosPbrNeutralInverse(vec3 toneMapped)
+{
+    const float startCompression = 0.8 - 0.04;
+    const float desaturation = 0.15;
+    
+    // This is an approximation - the forward function has complex conditional logic
+    // that makes perfect inversion difficult
+    vec3 color = toneMapped;
+    
+    // Try to undo the desaturation mix
+    float peak = max(color.r, max(color.g, color.b));
+    
+    // Approximate inverse of the compression
+    if (peak >= startCompression) {
+        const float d = 1.0 - startCompression;
+        // Approximate inverse of: newPeak = 1. - d * d / (peak + d - startCompression)
+        // This is a rough approximation
+        float originalPeak = peak / (1.0 - peak + startCompression);
+        color *= originalPeak / peak;
+    }
+    
+    // Try to undo the offset
+    float x = min(color.r, min(color.g, color.b));
+    float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+    color += offset;
+    
+    return color;
+}
+
+// Complete inverse tone mapping function
+vec3 toneMapInverse(vec3 toneMapped)
+{
+    vec3 color = toneMapped;
+    
+    // Then undo the specific tonemapping (this would need to match the forward path)
+#ifdef TONEMAP_KHR_PBR_NEUTRAL
+    color = toneMap_KhronosPbrNeutralInverse(color);
+#endif
+
+#ifdef TONEMAP_ACES_HILL_EXPOSURE_BOOST
+    color = toneMapACES_HillInverse(color);
+    color *= 0.6;  // Undo the exposure boost
+#endif
+
+#ifdef TONEMAP_ACES_HILL
+    color = toneMapACES_HillInverse(color);
+#endif
+
+#ifdef TONEMAP_ACES_NARKOWICZ
+    color = toneMapACES_NarkowiczInverse(color);
+#endif
+
+    // Finally undo the exposure
+    color /= u_Exposure;
+    
+    return color;
+}
