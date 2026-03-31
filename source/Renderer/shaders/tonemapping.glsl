@@ -147,30 +147,22 @@ vec3 toneMapACES_NarkowiczInverse(vec3 toneMapped)
     const float C = 2.43;
     const float D = 0.59;
     const float E = 0.14;
+
+    vec3 y = toneMapped;
+        
+    // Rearrange to: y*(C*x^2 + D*x + E) = x*(A*x + B)
+    // Which gives: y*C*x^2 + y*D*x + y*E = A*x^2 + B*x
+    // Rearrange to: (y*C - A)*x^2 + (y*D - B)*x + y*E = 0
     
-    // For each component, solve the quadratic equation
-    vec3 result;
-    for(int i = 0; i < 3; i++)
-    {
-        float y = toneMapped[i];
-        
-        // Rearrange to: y*(C*x^2 + D*x + E) = x*(A*x + B)
-        // Which gives: y*C*x^2 + y*D*x + y*E = A*x^2 + B*x
-        // Rearrange to: (y*C - A)*x^2 + (y*D - B)*x + y*E = 0
-        
-        float a = y * C - A;
-        float b = y * D - B;
-        float c = y * E;
-        
-        // Solve quadratic equation: ax^2 + bx + c = 0
-        float discriminant = b * b - 4.0 * a * c;
-        
-        // Take positive root
-        float x1 = (-b + sqrt(discriminant)) / (2.0 * a);
-        float x2 = (-b - sqrt(discriminant)) / (2.0 * a);
-        result[i] = max(0.0, max(x1, x2));
-        
-    }
+    vec3 a = y * C - A;
+    vec3 b = y * D - B;
+    vec3 c = y * E;
+    
+    // Solve quadratic equation: ax^2 + bx + c = 0
+    vec3 discriminant = b * b - 4.0 * a * c;
+    
+    // Take positive root
+    vec3 result = (-b - sqrt(discriminant)) / (2.0 * a);
     
     return result;
 }
@@ -179,27 +171,20 @@ vec3 toneMapACES_NarkowiczInverse(vec3 toneMapped)
 // Solves: y = (x*(x + 0.0245786) - 0.000090537) / (x*(0.983729*x + 0.4329510) + 0.238081) for x
 vec3 RRTAndODTFitInverse(vec3 toneMapped)
 {
-    vec3 result;
-    for(int i = 0; i < 3; i++)
-    {
-        float y = toneMapped[i];
+    vec3 y = toneMapped;
         
-        // Rearrange: y * (x*(0.983729*x + 0.4329510) + 0.238081) = x*(x + 0.0245786) - 0.000090537
-        // y * (0.983729*x^2 + 0.4329510*x + 0.238081) = x^2 + 0.0245786*x - 0.000090537
-        // y*0.983729*x^2 + y*0.4329510*x + y*0.238081 = x^2 + 0.0245786*x - 0.000090537
-        // (y*0.983729 - 1.0)*x^2 + (y*0.4329510 - 0.0245786)*x + (y*0.238081 + 0.000090537) = 0
-        
-        float a = y * 0.983729 - 1.0;
-        float b = y * 0.4329510 - 0.0245786;
-        float c = y * 0.238081 + 0.000090537;
-        
-        float discriminant = b * b - 4.0 * a * c;
-        
-        float x1 = (-b + sqrt(discriminant)) / (2.0 * a);
-        float x2 = (-b - sqrt(discriminant)) / (2.0 * a);
-        result[i] = max(0.0, max(x1, x2));
-        
-    }
+    // Rearrange: y * (x*(0.983729*x + 0.4329510) + 0.238081) = x*(x + 0.0245786) - 0.000090537
+    // y * (0.983729*x^2 + 0.4329510*x + 0.238081) = x^2 + 0.0245786*x - 0.000090537
+    // y*0.983729*x^2 + y*0.4329510*x + y*0.238081 = x^2 + 0.0245786*x - 0.000090537
+    // (y*0.983729 - 1.0)*x^2 + (y*0.4329510 - 0.0245786)*x + (y*0.238081 + 0.000090537) = 0
+    
+    vec3 a = y * 0.983729 - 1.0;
+    vec3 b = y * 0.4329510 - 0.0245786;
+    vec3 c = y * 0.238081 + 0.000090537;
+    
+    vec3 discriminant = b * b - 4.0 * a * c;
+    
+    vec3 result = (-b - sqrt(discriminant)) / (2.0 * a);
     
     return result;
 }
