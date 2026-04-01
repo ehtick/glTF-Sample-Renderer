@@ -39,9 +39,10 @@ class ResourceLoader {
      * loadGltf asynchroneously and create resources for rendering
      * @param {(String | ArrayBuffer | File)} gltfFile the .gltf or .glb file either as path or as preloaded resource. In node.js environments, only ArrayBuffer types are accepted.
      * @param {File[]} [externalFiles] additional files containing resources that are referenced in the gltf
+     * @param {Boolean} allowResourceAbsolutePath whether to allow absolute paths for images/buffers.
      * @returns {Promise} a promise that fulfills when the gltf file was loaded
      */
-    async loadGltf(gltfFile, externalFiles) {
+    async loadGltf(gltfFile, externalFiles, allowResourceAbsolutePath = true) {
         let isGlb = undefined;
         let buffers = undefined;
         let json = undefined;
@@ -104,13 +105,8 @@ class ResourceLoader {
         //Make sure draco decoder instance is ready
         gltf.fromJson(json);
 
-        // because the gltf image paths are not relative
-        // to the gltf, we have to resolve all image paths before that
-        for (const image of gltf.images) {
-            image.resolveRelativePath(getContainingFolder(gltf.path));
-        }
         await init(`${this.libPath}mikktspace_bg.wasm`);
-        await gltfLoader.load(gltf, this.view.context, buffers);
+        await gltfLoader.load(gltf, this.view.context, buffers, allowResourceAbsolutePath);
 
         return gltf;
     }

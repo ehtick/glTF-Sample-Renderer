@@ -1,5 +1,5 @@
 import { GltfObject } from "./gltf_object.js";
-import { getExtension } from "./utils.js";
+import { cleanRelativePath, getContainingFolder, getExtension } from "./utils.js";
 import { AsyncFileReader } from "../ResourceLoader/async_file_reader.js";
 import { GL } from "../Renderer/webgl";
 import { ImageMimeType } from "./image_mime_type.js";
@@ -27,19 +27,7 @@ class gltfImage extends GltfObject {
         this.miplevel = miplevel; // nonstandard
     }
 
-    resolveRelativePath(basePath) {
-        if (typeof this.uri === "string" || this.uri instanceof String) {
-            if (this.uri.startsWith("data:")) {
-                return;
-            }
-            if (this.uri.startsWith("./")) {
-                this.uri = this.uri.substring(2);
-            }
-            this.uri = basePath + this.uri;
-        }
-    }
-
-    async load(gltf, additionalFiles = undefined) {
+    async load(gltf, additionalFiles = undefined, allowResourceAbsolutePath) {
         if (this.image !== undefined) {
             if (this.mimeType !== ImageMimeType.GLTEXTURE) {
                 console.error("image has already been loaded");
@@ -50,7 +38,7 @@ class gltfImage extends GltfObject {
         if (
             !(await this.setImageFromBufferView(gltf)) &&
             !(await this.setImageFromFiles(gltf, additionalFiles)) &&
-            !(await this.setImageFromUri(gltf)) &&
+            !(await this.setImageFromUri(gltf, allowResourceAbsolutePath)) &&
             !(await this.setImageFromBase64(gltf))
         ) {
             return;
@@ -147,17 +135,26 @@ class gltfImage extends GltfObject {
         return await this.setImageFromBytes(gltf, new Uint8Array(buffer));
     }
 
-    async setImageFromUri(gltf) {
+    async setImageFromUri(gltf, allowResourceAbsolutePath) {
         if (this.uri === undefined || this.uri.startsWith("data:")) {
             return false;
         }
+        if (!allowResourceAbsolutePath) {
+            const colonIndex = this.uri.indexOf(":");
+            const slashIndex = this.uri.indexOf("/");
+            if (colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex)) {
+                throw new Error("Absolute URLs are not allowed for security reasons: " + this.uri);
+            }
+        }
+        const parentPath = getContainingFolder(gltf.path ?? "");
+        const fullPath = parentPath + this.uri;
         if (this.mimeType === undefined) {
             this.setMimetypeFromFilename(this.uri);
         }
 
         if (this.mimeType === ImageMimeType.KTX2) {
             if (gltf.ktxDecoder !== undefined) {
-                this.image = await gltf.ktxDecoder.loadKtxFromUri(this.uri);
+                this.image = await gltf.ktxDecoder.loadKtxFromUri(fullPath);
             } else {
                 console.warn("Loading of ktx images failed: KtxDecoder not initalized");
             }
@@ -168,9 +165,9 @@ class gltfImage extends GltfObject {
                 this.mimeType === ImageMimeType.WEBP)
         ) {
             try {
-                this.image = await gltfImage.loadHTMLImage(this.uri);
+                this.image = await gltfImage.loadHTMLImage(fullPath);
             } catch {
-                throw new Error(`Could not load image from ${this.uri}`);
+                throw new Error(`Could not load image from ${fullPath}`);
             }
         } else if (this.mimeType === ImageMimeType.JPEG && this.uri instanceof ArrayBuffer) {
             this.image = jpeg.decode(this.uri, { useTArray: true });
@@ -199,9 +196,9 @@ class gltfImage extends GltfObject {
         if (this.uri === undefined || files === undefined) {
             return false;
         }
-
+        const cleanURI = cleanRelativePath(this.uri);
         let foundFile = files.find((file) => {
-            if (file[0] == "/" + this.uri) {
+            if (file[0] == "/" + cleanURI) {
                 return true;
             }
         });

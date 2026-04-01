@@ -140,6 +140,28 @@ function combinePaths() {
     return parts.join("/");
 }
 
+function cleanRelativePath(relativePath) {
+    if (relativePath.startsWith("./")) {
+        relativePath = relativePath.substring(2);
+    }
+    while (relativePath.includes("/./")) {
+        relativePath = relativePath.replace("/./", "/");
+    }
+    if (relativePath.startsWith("../")) {
+        throw new Error(
+            "Browser do not allow accessing files in parent directories " + relativePath
+        );
+    }
+    let searchIndex = relativePath.indexOf("/../");
+    while (searchIndex !== -1) {
+        let slashIndex = relativePath.lastIndexOf("/", searchIndex - 1);
+        relativePath =
+            relativePath.substring(0, slashIndex) + relativePath.substring(searchIndex + 4);
+        searchIndex = relativePath.indexOf("/../");
+    }
+    return relativePath;
+}
+
 // marker interface used to for parsing the uniforms
 class UniformStruct {}
 
@@ -234,6 +256,7 @@ export {
     getFileNameWithoutExtension,
     getContainingFolder,
     combinePaths,
+    cleanRelativePath,
     UniformStruct,
     Timer,
     AnimationTimer,

@@ -143,6 +143,7 @@ GltfState containing a state for visualization in GltfView
                 * [.GEOMETRYNORMAL](#GltfState.DebugOutput.generic.GEOMETRYNORMAL)
                 * [.TANGENT](#GltfState.DebugOutput.generic.TANGENT)
                 * [.BITANGENT](#GltfState.DebugOutput.generic.BITANGENT)
+                * [.TANGENTW](#GltfState.DebugOutput.generic.TANGENTW)
                 * [.WORLDSPACENORMAL](#GltfState.DebugOutput.generic.WORLDSPACENORMAL)
                 * [.ALPHA](#GltfState.DebugOutput.generic.ALPHA)
                 * [.OCCLUSION](#GltfState.DebugOutput.generic.OCCLUSION)
@@ -408,6 +409,7 @@ such as "NORMAL"
         * [.GEOMETRYNORMAL](#GltfState.DebugOutput.generic.GEOMETRYNORMAL)
         * [.TANGENT](#GltfState.DebugOutput.generic.TANGENT)
         * [.BITANGENT](#GltfState.DebugOutput.generic.BITANGENT)
+        * [.TANGENTW](#GltfState.DebugOutput.generic.TANGENTW)
         * [.WORLDSPACENORMAL](#GltfState.DebugOutput.generic.WORLDSPACENORMAL)
         * [.ALPHA](#GltfState.DebugOutput.generic.ALPHA)
         * [.OCCLUSION](#GltfState.DebugOutput.generic.OCCLUSION)
@@ -459,6 +461,7 @@ generic debug outputs
     * [.GEOMETRYNORMAL](#GltfState.DebugOutput.generic.GEOMETRYNORMAL)
     * [.TANGENT](#GltfState.DebugOutput.generic.TANGENT)
     * [.BITANGENT](#GltfState.DebugOutput.generic.BITANGENT)
+    * [.TANGENTW](#GltfState.DebugOutput.generic.TANGENTW)
     * [.WORLDSPACENORMAL](#GltfState.DebugOutput.generic.WORLDSPACENORMAL)
     * [.ALPHA](#GltfState.DebugOutput.generic.ALPHA)
     * [.OCCLUSION](#GltfState.DebugOutput.generic.OCCLUSION)
@@ -498,6 +501,12 @@ output the tangent from the TBN
 
 ##### generic.BITANGENT
 output the bitangent from the TBN
+
+**Kind**: static property of [<code>generic</code>](#GltfState.DebugOutput.generic)  
+<a name="GltfState.DebugOutput.generic.TANGENTW"></a>
+
+##### generic.TANGENTW
+output the tangent w from the TBN (black corresponds to -1; white to 1
 
 **Kind**: static property of [<code>generic</code>](#GltfState.DebugOutput.generic)  
 <a name="GltfState.DebugOutput.generic.WORLDSPACENORMAL"></a>
@@ -732,7 +741,7 @@ that are then used to display the loaded data with GltfView
 
 * [ResourceLoader](#ResourceLoader)
     * [new ResourceLoader(view, libPath)](#new_ResourceLoader_new)
-    * [.loadGltf(gltfFile, [externalFiles])](#ResourceLoader+loadGltf) ⇒ <code>Promise</code>
+    * [.loadGltf(gltfFile, [externalFiles], allowResourceAbsolutePath)](#ResourceLoader+loadGltf) ⇒ <code>Promise</code>
     * [.loadEnvironment(environmentFile, [lutFiles])](#ResourceLoader+loadEnvironment) ⇒ <code>Promise</code>
     * [.initKtxLib([externalKtxLib])](#ResourceLoader+initKtxLib)
     * [.initDracoLib([externalDracoLib])](#ResourceLoader+initDracoLib)
@@ -753,16 +762,17 @@ are allocated directly on the WebGl2 Context
 
 <a name="ResourceLoader+loadGltf"></a>
 
-### resourceLoader.loadGltf(gltfFile, [externalFiles]) ⇒ <code>Promise</code>
+### resourceLoader.loadGltf(gltfFile, [externalFiles], allowResourceAbsolutePath) ⇒ <code>Promise</code>
 loadGltf asynchroneously and create resources for rendering
 
 **Kind**: instance method of [<code>ResourceLoader</code>](#ResourceLoader)  
 **Returns**: <code>Promise</code> - a promise that fulfills when the gltf file was loaded  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| gltfFile | <code>String</code> \| <code>ArrayBuffer</code> \| <code>File</code> | the .gltf or .glb file either as path or as preloaded resource. In node.js environments, only ArrayBuffer types are accepted. |
-| [externalFiles] | <code>Array.&lt;File&gt;</code> | additional files containing resources that are referenced in the gltf |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| gltfFile | <code>String</code> \| <code>ArrayBuffer</code> \| <code>File</code> |  | the .gltf or .glb file either as path or as preloaded resource. In node.js environments, only ArrayBuffer types are accepted. |
+| [externalFiles] | <code>Array.&lt;File&gt;</code> |  | additional files containing resources that are referenced in the gltf |
+| allowResourceAbsolutePath | <code>Boolean</code> | <code>true</code> | whether to allow absolute paths for images/buffers. |
 
 <a name="ResourceLoader+loadEnvironment"></a>
 
