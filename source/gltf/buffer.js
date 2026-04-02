@@ -1,4 +1,4 @@
-import { cleanRelativePath, getContainingFolder } from "./utils.js";
+import { cleanRelativePath, getContainingFolder, isAbsoluteUrl } from "./utils.js";
 import { GltfObject } from "./gltf_object.js";
 import { hasMeshOptCompression } from "./extension_utils.js";
 
@@ -23,7 +23,7 @@ class gltfBuffer extends GltfObject {
         const self = this;
         return new Promise(function (resolve, reject) {
             if (
-                !self.setBufferFromFiles(additionalFiles, resolve) &&
+                !self.setBufferFromFiles(gltf, additionalFiles, resolve) &&
                 !self.setBufferFromUri(gltf, resolve, reject, allowResourceAbsolutePath)
             ) {
                 if (hasMeshOptCompression(self)) {
@@ -41,13 +41,9 @@ class gltfBuffer extends GltfObject {
         if (this.uri === undefined) {
             return false;
         }
-        if (!allowResourceAbsolutePath) {
-            const colonIndex = this.uri.indexOf(":");
-            const slashIndex = this.uri.indexOf("/");
-            if (colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex)) {
-                reject("Absolute URLs are not allowed for security reasons: " + this.uri);
-                return true; // we return true, because the buffer has a uri, but we reject the loading due to security reasons
-            }
+        if (!allowResourceAbsolutePath && isAbsoluteUrl(this.uri)) {
+            reject("Absolute URLs are not allowed for security reasons: " + this.uri);
+            return true; // we return true, because the buffer has a uri, but we reject the loading due to security reasons
         }
         const parentPath = this.uri.startsWith("data:") ? "" : getContainingFolder(gltf.path ?? "");
         fetch(parentPath + this.uri)
@@ -70,14 +66,21 @@ class gltfBuffer extends GltfObject {
         return true;
     }
 
-    setBufferFromFiles(files, callback) {
+    setBufferFromFiles(gltf, files, callback) {
         if (this.uri === undefined || files === undefined) {
             return false;
         }
-        const cleanURI = cleanRelativePath(this.uri);
-        const foundFile = files.find(
-            (file) => file[1].name === cleanURI || file[1].fullPath === cleanURI
-        );
+        let actualPath = this.uri;
+        if (!isAbsoluteUrl(this.uri)) {
+            const parentPath = getContainingFolder(gltf.path ?? "");
+            actualPath = cleanRelativePath(parentPath + this.uri);
+        }
+
+        const foundFile = files.find((file) => {
+            if (file[0] == actualPath) {
+                return true;
+            }
+        });
 
         if (foundFile === undefined) {
             return false;

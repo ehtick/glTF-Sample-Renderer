@@ -75,7 +75,7 @@ class ResourceLoader {
             gltfFile[1] instanceof File
         ) {
             let fileContent = gltfFile[1];
-            filename = gltfFile[1].name;
+            filename = gltfFile[0];
             isGlb = getIsGlb(filename);
             if (isGlb) {
                 data = await AsyncFileReader.readAsArrayBuffer(fileContent);

@@ -1,5 +1,5 @@
 import { GltfObject } from "./gltf_object.js";
-import { cleanRelativePath, getContainingFolder, getExtension } from "./utils.js";
+import { cleanRelativePath, getContainingFolder, getExtension, isAbsoluteUrl } from "./utils.js";
 import { AsyncFileReader } from "../ResourceLoader/async_file_reader.js";
 import { GL } from "../Renderer/webgl";
 import { ImageMimeType } from "./image_mime_type.js";
@@ -139,12 +139,8 @@ class gltfImage extends GltfObject {
         if (this.uri === undefined || this.uri.startsWith("data:")) {
             return false;
         }
-        if (!allowResourceAbsolutePath) {
-            const colonIndex = this.uri.indexOf(":");
-            const slashIndex = this.uri.indexOf("/");
-            if (colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex)) {
-                throw new Error("Absolute URLs are not allowed for security reasons: " + this.uri);
-            }
+        if (!allowResourceAbsolutePath && isAbsoluteUrl(this.uri)) {
+            throw new Error("Absolute URLs are not allowed for security reasons: " + this.uri);
         }
         const parentPath = getContainingFolder(gltf.path ?? "");
         const fullPath = parentPath + this.uri;
@@ -196,9 +192,14 @@ class gltfImage extends GltfObject {
         if (this.uri === undefined || files === undefined) {
             return false;
         }
-        const cleanURI = cleanRelativePath(this.uri);
+        let actualPath = this.uri;
+        if (!isAbsoluteUrl(this.uri)) {
+            const parentPath = getContainingFolder(gltf.path ?? "");
+            actualPath = cleanRelativePath(parentPath + this.uri);
+        }
+
         let foundFile = files.find((file) => {
-            if (file[0] == "/" + cleanURI) {
+            if (file[0] == actualPath) {
                 return true;
             }
         });
