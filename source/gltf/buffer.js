@@ -1,6 +1,6 @@
-import { cleanRelativePath, getContainingFolder, isAbsoluteUrl } from "./utils.js";
 import { GltfObject } from "./gltf_object.js";
 import { hasMeshOptCompression } from "./extension_utils.js";
+import { ResourceLoaderUtils } from "../ResourceLoader/loader_utils.js";
 
 class gltfBuffer extends GltfObject {
     static animatedProperties = [];
@@ -41,11 +41,13 @@ class gltfBuffer extends GltfObject {
         if (this.uri === undefined) {
             return false;
         }
-        if (!allowResourceAbsolutePath && isAbsoluteUrl(this.uri)) {
+        if (!allowResourceAbsolutePath && ResourceLoaderUtils.isAbsoluteUrl(this.uri)) {
             reject("Absolute URLs are not allowed for security reasons: " + this.uri);
             return true; // we return true, because the buffer has a uri, but we reject the loading due to security reasons
         }
-        const parentPath = this.uri.startsWith("data:") ? "" : getContainingFolder(gltf.path ?? "");
+        const parentPath = this.uri.startsWith("data:")
+            ? ""
+            : ResourceLoaderUtils.getContainingFolder(gltf.path ?? "");
         fetch(parentPath + this.uri)
             .then((response) => {
                 if (!response.ok) {
@@ -71,9 +73,9 @@ class gltfBuffer extends GltfObject {
             return false;
         }
         let actualPath = this.uri;
-        if (!isAbsoluteUrl(this.uri)) {
-            const parentPath = getContainingFolder(gltf.path ?? "");
-            actualPath = cleanRelativePath(parentPath + this.uri);
+        if (!ResourceLoaderUtils.isAbsoluteUrl(this.uri)) {
+            const parentPath = ResourceLoaderUtils.getContainingFolder(gltf.path ?? "");
+            actualPath = ResourceLoaderUtils.cleanRelativePath(parentPath + this.uri);
         }
 
         const foundFile = files.find((file) => {

@@ -100,69 +100,6 @@ function clamp(number, min, max) {
     return Math.min(Math.max(number, min), max);
 }
 
-function getIsGlb(filename) {
-    return getExtension(filename) == "glb";
-}
-
-function getIsGltf(filename) {
-    return getExtension(filename) == "gltf";
-}
-
-function getIsHdr(filename) {
-    return getExtension(filename) == "hdr";
-}
-
-function getExtension(filename) {
-    const split = filename.toLowerCase().split(".");
-    if (split.length == 1) {
-        return undefined;
-    }
-    return split[split.length - 1];
-}
-
-function getFileName(filePath) {
-    const split = filePath.split("/");
-    return split[split.length - 1];
-}
-
-function getFileNameWithoutExtension(filePath) {
-    const filename = getFileName(filePath);
-    const index = filename.lastIndexOf(".");
-    return filename.slice(0, index);
-}
-
-function getContainingFolder(filePath) {
-    return filePath.substring(0, filePath.lastIndexOf("/") + 1);
-}
-
-function combinePaths() {
-    const parts = Array.from(arguments);
-    return parts.join("/");
-}
-
-function cleanRelativePath(relativePath) {
-    if (relativePath.startsWith("./")) {
-        relativePath = relativePath.substring(2);
-    }
-    while (relativePath.includes("/./")) {
-        relativePath = relativePath.replace("/./", "/");
-    }
-    let searchIndex = relativePath.indexOf("/../");
-    while (searchIndex !== -1) {
-        let slashIndex = relativePath.lastIndexOf("/", searchIndex - 1);
-        relativePath =
-            relativePath.substring(0, slashIndex + 1) + relativePath.substring(searchIndex + 4);
-        searchIndex = relativePath.indexOf("/../");
-    }
-    return relativePath;
-}
-
-function isAbsoluteUrl(url) {
-    const colonIndex = url.indexOf(":");
-    const slashIndex = url.indexOf("/");
-    return colonIndex !== -1 && (slashIndex === -1 || colonIndex < slashIndex);
-}
-
 // marker interface used to for parsing the uniforms
 class UniformStruct {}
 
@@ -249,16 +186,6 @@ export {
     fromParams,
     stringHash,
     clamp,
-    getIsGlb,
-    getIsGltf,
-    getIsHdr,
-    getExtension,
-    getFileName,
-    getFileNameWithoutExtension,
-    getContainingFolder,
-    isAbsoluteUrl,
-    combinePaths,
-    cleanRelativePath,
     UniformStruct,
     Timer,
     AnimationTimer,

@@ -1,5 +1,4 @@
 import { glTF } from "../gltf/gltf.js";
-import { getIsGlb, getContainingFolder } from "../gltf/utils.js";
 import { GlbParser } from "./glb_parser.js";
 import { gltfLoader } from "./loader.js";
 import { gltfImage, ImageMimeType } from "../gltf/image.js";
@@ -16,6 +15,8 @@ import { DracoDecoder } from "./draco.js";
 import { KtxDecoder } from "./ktx.js";
 
 import { loadHDR } from "../libs/hdrpng.js";
+
+import { ResourceLoaderUtils } from "./loader_utils.js";
 
 /**
  * ResourceLoader can be used to load resources for the GltfState
@@ -76,7 +77,7 @@ class ResourceLoader {
         ) {
             let fileContent = gltfFile[1];
             filename = gltfFile[0];
-            isGlb = getIsGlb(filename);
+            isGlb = ResourceLoaderUtils.getExtension(filename) == "glb";
             if (isGlb) {
                 data = await AsyncFileReader.readAsArrayBuffer(fileContent);
             } else {
@@ -130,7 +131,7 @@ class ResourceLoader {
             });
             image = await loadHDR(new Uint8Array(imageData));
         } else {
-            console.error("Passed invalid type to loadEnvironment " + typeof gltfFile);
+            console.error("Passed invalid type to loadEnvironment " + typeof environmentFile);
         }
         if (image === undefined) {
             return undefined;

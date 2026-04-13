@@ -1,10 +1,10 @@
 import { GltfObject } from "./gltf_object.js";
-import { cleanRelativePath, getContainingFolder, getExtension, isAbsoluteUrl } from "./utils.js";
 import { AsyncFileReader } from "../ResourceLoader/async_file_reader.js";
 import { GL } from "../Renderer/webgl";
 import { ImageMimeType } from "./image_mime_type.js";
 import * as jpeg from "jpeg-js";
 import * as png from "fast-png";
+import { ResourceLoaderUtils } from "../ResourceLoader/loader_utils.js";
 
 class gltfImage extends GltfObject {
     static animatedProperties = [];
@@ -58,7 +58,7 @@ class gltfImage extends GltfObject {
     }
 
     setMimetypeFromFilename(filename) {
-        let extension = getExtension(filename);
+        let extension = ResourceLoaderUtils.getExtension(filename);
         if (extension == "ktx2" || extension == "ktx") {
             this.mimeType = ImageMimeType.KTX2;
         } else if (extension == "jpg" || extension == "jpeg") {
@@ -139,10 +139,10 @@ class gltfImage extends GltfObject {
         if (this.uri === undefined || this.uri.startsWith("data:")) {
             return false;
         }
-        if (!allowResourceAbsolutePath && isAbsoluteUrl(this.uri)) {
+        if (!allowResourceAbsolutePath && ResourceLoaderUtils.isAbsoluteUrl(this.uri)) {
             throw new Error("Absolute URLs are not allowed for security reasons: " + this.uri);
         }
-        const parentPath = getContainingFolder(gltf.path ?? "");
+        const parentPath = ResourceLoaderUtils.getContainingFolder(gltf.path ?? "");
         const fullPath = parentPath + this.uri;
         if (this.mimeType === undefined) {
             this.setMimetypeFromFilename(this.uri);
@@ -193,9 +193,9 @@ class gltfImage extends GltfObject {
             return false;
         }
         let actualPath = this.uri;
-        if (!isAbsoluteUrl(this.uri)) {
-            const parentPath = getContainingFolder(gltf.path ?? "");
-            actualPath = cleanRelativePath(parentPath + this.uri);
+        if (!ResourceLoaderUtils.isAbsoluteUrl(this.uri)) {
+            const parentPath = ResourceLoaderUtils.getContainingFolder(gltf.path ?? "");
+            actualPath = ResourceLoaderUtils.cleanRelativePath(parentPath + this.uri);
         }
 
         let foundFile = files.find((file) => {

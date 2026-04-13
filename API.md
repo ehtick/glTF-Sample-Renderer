@@ -13,6 +13,11 @@ that are then used to display the loaded data with GltfView</p>
 </dd>
 <dt><a href="#UserCamera">UserCamera</a></dt>
 <dd></dd>
+<dt><a href="#ResourceLoaderUtils">ResourceLoaderUtils</a></dt>
+<dd><p>Utility class providing static helper methods for resource loading operations,
+such as extracting file extensions, resolving folder paths, normalizing relative
+paths, and detecting absolute URLs.</p>
+</dd>
 </dl>
 
 <a name="GltfView"></a>
@@ -1001,4 +1006,65 @@ Fit view to updated canvas size without changing rotation if distance is incorre
 | --- | --- |
 | gltf | <code>Gltf</code> | 
 | sceneIndex | <code>number</code> | 
+
+<a name="ResourceLoaderUtils"></a>
+
+## ResourceLoaderUtils
+Utility class providing static helper methods for resource loading operations,such as extracting file extensions, resolving folder paths, normalizing relativepaths, and detecting absolute URLs.
+
+**Kind**: global class  
+
+* [ResourceLoaderUtils](#ResourceLoaderUtils)
+    * [.getExtension(filename)](#ResourceLoaderUtils.getExtension) ⇒ <code>string</code> \| <code>undefined</code>
+    * [.getContainingFolder(filePath)](#ResourceLoaderUtils.getContainingFolder) ⇒ <code>string</code>
+    * [.cleanRelativePath(relativePath)](#ResourceLoaderUtils.cleanRelativePath) ⇒ <code>string</code>
+    * [.isAbsoluteUrl(url)](#ResourceLoaderUtils.isAbsoluteUrl) ⇒ <code>boolean</code>
+
+<a name="ResourceLoaderUtils.getExtension"></a>
+
+### ResourceLoaderUtils.getExtension(filename) ⇒ <code>string</code> \| <code>undefined</code>
+Extracts the file extension from a filename.
+
+**Kind**: static method of [<code>ResourceLoaderUtils</code>](#ResourceLoaderUtils)  
+**Returns**: <code>string</code> \| <code>undefined</code> - The lowercase file extension (without the leading dot),  or `undefined` if the filename has no extension.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filename | <code>string</code> | The filename or path to extract the extension from. |
+
+<a name="ResourceLoaderUtils.getContainingFolder"></a>
+
+### ResourceLoaderUtils.getContainingFolder(filePath) ⇒ <code>string</code>
+Returns the directory portion of a file path, including the trailing slash.
+
+**Kind**: static method of [<code>ResourceLoaderUtils</code>](#ResourceLoaderUtils)  
+**Returns**: <code>string</code> - The path up to and including the last `/`, or an empty string  if no `/` is present.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filePath | <code>string</code> | The full file path. |
+
+<a name="ResourceLoaderUtils.cleanRelativePath"></a>
+
+### ResourceLoaderUtils.cleanRelativePath(relativePath) ⇒ <code>string</code>
+Normalizes a relative URL path by resolving `.` and `..` segments.- Strips a leading `./` prefix.- Collapses `/./` sequences to `/`.- Resolves `/../` sequences by removing the preceding path segment.
+
+**Kind**: static method of [<code>ResourceLoaderUtils</code>](#ResourceLoaderUtils)  
+**Returns**: <code>string</code> - The normalized path with dot segments resolved.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| relativePath | <code>string</code> | The relative path to clean. |
+
+<a name="ResourceLoaderUtils.isAbsoluteUrl"></a>
+
+### ResourceLoaderUtils.isAbsoluteUrl(url) ⇒ <code>boolean</code>
+Determines whether a URL is absolute (i.e. contains a scheme such as `http:` or `data:`).A URL is considered absolute when it contains a `:` that appears before any `/`.
+
+**Kind**: static method of [<code>ResourceLoaderUtils</code>](#ResourceLoaderUtils)  
+**Returns**: <code>boolean</code> - `true` if the URL is absolute, `false` otherwise.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| url | <code>string</code> | The URL string to test. |
 
