@@ -324,14 +324,14 @@ class gltfPrimitive extends GltfObject {
 
     computeCentroid(gltf) {
         const positionsAccessor = gltf.accessors[this.attributes.POSITION];
-        const positions = positionsAccessor.getNormalizedTypedView(gltf);
+        const positions = positionsAccessor.getNormalizedDeinterlacedView(gltf);
 
         if (this.indices !== undefined) {
             // Primitive has indices.
 
             const indicesAccessor = gltf.accessors[this.indices];
 
-            const indices = indicesAccessor.getTypedView(gltf);
+            const indices = indicesAccessor.getDeinterlacedView(gltf);
 
             const acc = new Float32Array(3);
 
