@@ -260,8 +260,10 @@ vec3 toneMapInverse(vec3 toneMapped)
     color = toneMapACES_NarkowiczInverse(color);
 #endif
 
-    // Finally undo the exposure
-    color /= u_Exposure;
+    if (u_Exposure > 0.0)
+    {
+        color /= u_Exposure; // Undo the exposure
+    }
     
     return color;
 }
